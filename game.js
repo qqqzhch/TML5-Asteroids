@@ -74,7 +74,8 @@ Matrix = function (rows, columns) {
   };
 };
 
-Sprite = function () {
+Sprite = function (colour) {
+  this.coloursave=colour;
   this.init = function (name, points) {
     this.name     = name;
     this.points   = points;
@@ -206,12 +207,13 @@ Sprite = function () {
       newNode.enter(this);
       this.currentNode = newNode;
     }
-
+    this.context.fillStyle = 'red';
     if (KEY_STATUS.g && this.currentNode) {
       this.context.lineWidth = 3.0;
       this.context.strokeStyle = 'green';
       this.context.strokeRect(gridx*GRID_SIZE+2, gridy*GRID_SIZE+2, GRID_SIZE-4, GRID_SIZE-4);
       this.context.strokeStyle = 'black';
+      
       this.context.lineWidth = 1.0;
     }
   };
@@ -244,6 +246,11 @@ Sprite = function () {
 
     this.context.closePath();
     this.context.stroke();
+    // console.log('设置精灵颜色')
+    this.context.fillStyle=this.coloursave ||'green';
+    this.context.fill()
+
+
   };
   this.findCollisionCanidates = function () {
     if (!this.visible || !this.currentNode) return [];
@@ -407,6 +414,7 @@ Ship = function () {
       this.bulletCounter -= delta;
     }
     if (KEY_STATUS.space) {
+      console.log('1---')
       if (this.bulletCounter <= 0) {
         this.bulletCounter = 10;
         for (var i = 0; i < this.bullets.length; i++) {
@@ -446,9 +454,11 @@ Ship = function () {
   };
 
 };
-Ship.prototype = new Sprite();
+Ship.prototype = new Sprite("#228fbd");
 
 BigAlien = function () {
+  
+
   this.init("bigalien",
             [-20,   0,
              -12,  -4,
@@ -495,6 +505,8 @@ BigAlien = function () {
 
   this.setup = function () {
     this.newPosition();
+    this.fillStyle="red"
+    console.log('---')
 
     for (var i = 0; i < 3; i++) {
       var bull = new AlienBullet();
@@ -570,7 +582,8 @@ BigAlien = function () {
     }
   }
 };
-BigAlien.prototype = new Sprite();
+BigAlien.prototype = new Sprite("#4f5555");
+
 
 Bullet = function () {
   this.init("bullet", [0, 0]);
@@ -580,7 +593,7 @@ Bullet = function () {
   this.postMove = this.wrapPostMove;
   // asteroid can look for bullets so doesn't have
   // to be other way around
-  //this.collidesWith = ["asteroid"];
+  // this.collidesWith = ["asteroid"];
 
   this.configureTransform = function () {};
   this.draw = function () {
@@ -592,6 +605,8 @@ Bullet = function () {
       this.context.lineTo(this.x+1, this.y+1);
       this.context.moveTo(this.x+1, this.y-1);
       this.context.lineTo(this.x-1, this.y+1);
+      
+     
       this.context.stroke();
       this.context.restore();
     }
@@ -616,7 +631,7 @@ Bullet = function () {
   };
 
 };
-Bullet.prototype = new Sprite();
+Bullet.prototype = new Sprite("#f15a22");
 
 AlienBullet = function () {
   this.init("alienbullet");
@@ -676,7 +691,8 @@ Asteroid = function () {
     this.die();
   };
 };
-Asteroid.prototype = new Sprite();
+//Big monster
+Asteroid.prototype = new Sprite('#afdfe4');
 
 Explosion = function () {
   this.init("explosion");
@@ -848,14 +864,20 @@ for (var sfx in SFX) {
   (function () {
     var audio = SFX[sfx];
     audio.muted = true;
-    audio.play();
+     setTimeout(()=>{
+      audio.load();
+      audio.play();
+      console.log('****')
+     },1000*8)
+    
 
     SFX[sfx] = function () {
-      if (!this.muted) {
-        if (audio.duration == 0) {
+      if (this.muted) {
+        if (audio.duration < 1) {
           // somehow dropped out
-          audio.load();
+          
           audio.play();
+          console.log('|||||')
         } else {
           audio.muted = false;
           audio.currentTime = 0;
@@ -865,6 +887,7 @@ for (var sfx in SFX) {
     }
   })();
 }
+
 // pre-mute audio
 SFX.muted = true;
 
@@ -1123,9 +1146,24 @@ $(function () {
               window.setTimeout(callback, 1000 / 60);
             };
   })();
+  //绘制图片
+  var img=new Image();
+  img.src="https://d2ekshiy7r5vl7.cloudfront.net/37000304.png";
+  var imgObj;
+  img.onload=function(){
+    imgObj=this;
+    
+  }
 
   var mainLoop = function () {
     context.clearRect(0, 0, Game.canvasWidth, Game.canvasHeight);
+    if(imgObj==undefined){
+      
+      
+    }else{
+       context.drawImage(imgObj,0, 0, Game.canvasWidth, Game.canvasHeight); 
+    }
+    
 
     Game.FSM.execute();
 
